@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>花店專門店</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", sans-serif;
+      background: #fdeef4; /* 淡粉色背景 */
+      color: #333;
+    }
+    header {
+      background: #e48ca4; /* 深粉紅色 */
+      padding: 1.5rem;
+      text-align: center;
+      color: white;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      background: #c96b85;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    nav a:hover {
+      color: #ffd6e8;
+    }
+    section {
+      display: none;
+      padding: 2rem;
+      animation: fadeIn 0.6s;
+    }
+    section.active {
+      display: block;
+    }
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 1.5rem auto;
+      padding: 1.5rem;
+      max-width: 700px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    img {
+      width: 100%;
+      border-radius: 12px;
+    }
+    footer {
+      background: #c96b85;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(15px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌸 幸福花店</h1>
+    <p>讓花語傳遞你的心意</p>
+  </header>
+
+  <nav>
+    <a href="#" onclick="showPage('home')">首頁</a>
+    <a href="#" onclick="showPage('products')">花卉商品</a>
+    <a href="#" onclick="showPage('services')">服務</a>
+    <a href="#" onclick="showPage('about')">關於我們</a>
+    <a href="#" onclick="showPage('contact')">聯絡我們</a>
+  </nav>
+
+  <!-- 首頁 -->
+  <section id="home" class="active">
+    <div class="card">
+      <h2>歡迎來到幸福花店！</h2>
+      <p>新鮮花卉、精緻花束，讓每一天充滿浪漫氛圍。</p>
+      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800" alt="美麗花束">
+    </div>
+  </section>
+
+  <!-- 商品 -->
+  <section id="products">
+    <div class="card">
+      <h2>花卉商品</h2>
+      <p>🌹 玫瑰花束 &nbsp; 🌸 百合花禮 &nbsp; 🌻 向日葵盆栽</p>
+      <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800" alt="花卉商品">
+    </div>
+  </section>
+
+  <!-- 服務 -->
+  <section id="services">
+    <div class="card">
+      <h2>專業服務</h2>
+      <p>✔ 婚禮花藝 &nbsp; ✔ 慶典布置 &nbsp; ✔ 花卉訂閱配送</p>
+      <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800" alt="花店服務">
+    </div>
+  </section>
+
+  <!-- 關於我們 -->
+  <section id="about">
+    <div class="card">
+      <h2>關於我們</h2>
+      <p>幸福花店成立於 2010 年，用花卉創造美好回憶，傳遞愛與祝福。</p>
+      <img src="https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=800" alt="花店團隊">
+    </div>
+  </section>
+
+  <!-- 聯絡我們 -->
+  <section id="contact">
+    <div class="card">
+      <h2>聯絡我們</h2>
+      <p>📍 地址：台北市大安區花香路 520 號<br>
+         📞 電話：(02) 9876-5432<br>
+         ✉ Email：flower@example.com</p>
+      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800" alt="花店插圖">
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 幸福花店 | 版權所有</p>
+  </footer>
+
+  <script>
+    function showPage(pageId) {
+      document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+      document.getElementById(pageId).classList.add("active");
+    }
+  </script>
+</body>
+</html>
