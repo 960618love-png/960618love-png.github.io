@@ -1,149 +1,328 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>花店專門店</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>育嬰用品購物網 - 範例 (含進銷存)</title>
   <style>
-    body {
-      margin: 0;
-      font-family: "Microsoft JhengHei", sans-serif;
-      background: #fdeef4; /* 淡粉色背景 */
-      color: #333;
-    }
-    header {
-      background: #e48ca4; /* 深粉紅色 */
-      padding: 1.5rem;
-      text-align: center;
-      color: white;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      background: #c96b85;
-      padding: 1rem;
-      position: sticky;
-      top: 0;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    nav a:hover {
-      color: #ffd6e8;
-    }
-    section {
-      display: none;
-      padding: 2rem;
-      animation: fadeIn 0.6s;
-    }
-    section.active {
-      display: block;
-    }
-    .card {
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      margin: 1.5rem auto;
-      padding: 1.5rem;
-      max-width: 700px;
-      text-align: center;
-      transition: transform 0.3s;
-    }
-    .card:hover {
-      transform: scale(1.03);
-    }
-    img {
-      width: 100%;
-      border-radius: 12px;
-    }
-    footer {
-      background: #c96b85;
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      margin-top: 2rem;
-    }
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(15px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
+    /* 簡潔現代的樣式 (單檔示範) */
+    :root{--accent:#0b7fab;--muted:#666;--bg:#f7f9fb}
+    *{box-sizing:border-box}
+    body{font-family: system-ui, -apple-system, 'Noto Sans TC', Arial; margin:0;background:var(--bg);color:#111}
+    header{background:white;padding:16px 20px;display:flex;align-items:center;gap:18px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    header h1{font-size:18px;margin:0}
+    .container{display:grid;grid-template-columns:1fr 360px;gap:20px;padding:20px;max-width:1200px;margin:18px auto}
+    .panel{background:white;border-radius:10px;padding:16px;box-shadow:0 1px 6px rgba(16,24,40,.04)}
+    .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .card{border-radius:8px;padding:12px;border:1px solid #eceef1}
+    .card img{width:100%;height:140px;object-fit:contain;background:#fff;padding:8px;border-radius:6px}
+    .price{color:var(--accent);font-weight:700}
+    button{background:var(--accent);color:#fff;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .muted{color:var(--muted);font-size:13px}
+    .cart{position:sticky;top:20px}
+    .cart .items{max-height:420px;overflow:auto;margin:8px 0}
+    .row{display:flex;gap:8px;align-items:center}
+    input,select,textarea{padding:8px;border-radius:6px;border:1px solid #dfe6ea;width:100%}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #f1f3f5;font-size:13px}
+    .admin-toggle{margin-left:auto}
+    .small{font-size:13px}
+    .badge{background:#eef6f8;color:#055; padding:4px 8px;border-radius:999px;font-weight:600}
+    footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;align-items:center}
+    .flexcol{display:flex;flex-direction:column;gap:8px}
+    .actions{display:flex;gap:8px}
+    .danger{background:#e14f4f}
+    .success{background:#2f9e44}
   </style>
 </head>
 <body>
   <header>
-    <h1>🌸 幸福花店</h1>
-    <p>讓花語傳遞你的心意</p>
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect width='100%' height='100%' rx='8' fill='%230b7fab'/><text x='50%' y='56%' font-size='18' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>BB</text></svg>" alt="logo" style="width:44px;height:44px;border-radius:8px;">
+    <h1>育嬰用品購物網（示範）</h1>
+    <div class="muted">內建進銷存 (前端 + localStorage)</div>
+    <div class="admin-toggle">
+      <label class="row small muted">切換至管理模式 <input type="checkbox" id="adminMode" style="margin-left:8px"></label>
+    </div>
   </header>
 
-  <nav>
-    <a href="#" onclick="showPage('home')">首頁</a>
-    <a href="#" onclick="showPage('products')">花卉商品</a>
-    <a href="#" onclick="showPage('services')">服務</a>
-    <a href="#" onclick="showPage('about')">關於我們</a>
-    <a href="#" onclick="showPage('contact')">聯絡我們</a>
-  </nav>
+  <main class="container">
+    <section class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div>
+          <h2 style="margin:0 0 6px 0">產品目錄</h2>
+          <div class="muted small">共 <span id="productCount">0</span> 項商品</div>
+        </div>
+        <div class="controls">
+          <input id="search" placeholder="搜尋商品 或 篩選 (如奶粉)" style="width:340px">
+          <select id="sort"><option value="default">排序：預設</option><option value="price_asc">價格：低→高</option><option value="price_desc">價格：高→低</option><option value="stock_low">庫存：少到多</option></select>
+        </div>
+      </div>
 
-  <!-- 首頁 -->
-  <section id="home" class="active">
-    <div class="card">
-      <h2>歡迎來到幸福花店！</h2>
-      <p>新鮮花卉、精緻花束，讓每一天充滿浪漫氛圍。</p>
-      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800" alt="美麗花束">
-    </div>
-  </section>
+      <div id="productGrid" class="products" style="margin-top:12px"></div>
+    </section>
 
-  <!-- 商品 -->
-  <section id="products">
-    <div class="card">
-      <h2>花卉商品</h2>
-      <p>🌹 玫瑰花束 &nbsp; 🌸 百合花禮 &nbsp; 🌻 向日葵盆栽</p>
-      <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800" alt="花卉商品">
-    </div>
-  </section>
+    <aside class="panel cart">
+      <h3 style="margin:0">購物車 <span class="badge" id="cartCount">0</span></h3>
+      <div class="muted small">在結帳時會產生銷貨紀錄並扣庫存</div>
+      <div id="cartItems" class="items"></div>
+      <div style="margin-top:8px" class="row">
+        <div style="flex:1">
+          <div class="muted small">收件人</div>
+          <input id="custName" placeholder="姓名">
+        </div>
+      </div>
+      <div style="margin-top:8px" class="row">
+        <div style="flex:1">
+          <div class="muted small">聯絡電話</div>
+          <input id="custPhone" placeholder="09xx-xxx-xxx">
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="muted small">地址</div>
+        <input id="custAddr" placeholder="收件地址">
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="checkoutBtn">下單 (結帳)</button>
+        <button id="clearCartBtn" style="background:#999">清空購物車</button>
+      </div>
 
-  <!-- 服務 -->
-  <section id="services">
-    <div class="card">
-      <h2>專業服務</h2>
-      <p>✔ 婚禮花藝 &nbsp; ✔ 慶典布置 &nbsp; ✔ 花卉訂閱配送</p>
-      <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800" alt="花店服務">
-    </div>
-  </section>
+      <hr style="margin:12px 0">
+      <div class="muted small">管理功能（需勾選「管理模式」）</div>
+      <div style="display:none" id="adminPanel">
+        <h4 style="margin-top:8px">進貨 / 新增商品</h4>
+        <div class="flexcol">
+          <input id="pName" placeholder="商品名稱 (例：嬰兒濕巾 80抽)">
+          <input id="pSKU" placeholder="型號 / SKU (可空白)">
+          <input id="pPrice" placeholder="價格 (數字)">
+          <input id="pStock" placeholder="進貨數量 (整數)">
+          <input id="pImg" placeholder="圖片 URL (可留空)">
+          <div style="display:flex;gap:8px">
+            <button id="addProductBtn">新增/進貨（建立商品或增加庫存）</button>
+            <button id="importSampleBtn" style="background:#2f9e44">載入範例商品</button>
+            <button id="exportDataBtn" style="background:#555">匯出資料 JSON</button>
+          </div>
+        </div>
 
-  <!-- 關於我們 -->
-  <section id="about">
-    <div class="card">
-      <h2>關於我們</h2>
-      <p>幸福花店成立於 2010 年，用花卉創造美好回憶，傳遞愛與祝福。</p>
-      <img src="https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=800" alt="花店團隊">
-    </div>
-  </section>
+        <h4 style="margin-top:12px">庫存 & 銷售紀錄</h4>
+        <div style="max-height:220px;overflow:auto">
+          <table id="inventoryTable"><thead><tr><th>名稱</th><th>SKU</th><th>價格</th><th>庫存</th><th>操作</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="viewSalesBtn">查看銷貨報表</button>
+          <button id="resetDemoBtn" class="danger">重設 (清空示範資料)</button>
+        </div>
+        <div id="historyPanel" style="margin-top:8px"></div>
+      </div>
+    </aside>
+  </main>
 
-  <!-- 聯絡我們 -->
-  <section id="contact">
-    <div class="card">
-      <h2>聯絡我們</h2>
-      <p>📍 地址：台北市大安區花香路 520 號<br>
-         📞 電話：(02) 9876-5432<br>
-         ✉ Email：flower@example.com</p>
-      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800" alt="花店插圖">
-    </div>
-  </section>
-
-  <footer>
-    <p>© 2025 幸福花店 | 版權所有</p>
-  </footer>
+  <footer class="panel" style="max-width:1200px;margin:0 auto 30px auto">說明：此檔為前端示範，使用 localStorage 儲存資料。適合做 prototype 或教學；實務上需後端、資料庫、身分驗證與金流串接。</footer>
 
   <script>
-    function showPage(pageId) {
-      document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
-      document.getElementById(pageId).classList.add("active");
+    // ======= 資料模型 (localStorage) =======
+    const STORE_KEYS = {products:'bb_products_v1', cart:'bb_cart_v1', sales:'bb_sales_v1', purchases:'bb_purchases_v1'};
+
+    // 初始範例商品
+    const SAMPLE_PRODUCTS = [
+      {id:genId(), name:'嬰兒濕巾 80抽', sku:'Wipes-80', price:120, stock:50, img:''},
+      {id:genId(), name:'配方奶粉（0-6m）400g', sku:'Milk-400', price:420, stock:24, img:''},
+      {id:genId(), name:'安撫奶嘴 (矽膠)', sku:'Pacifier-1', price:180, stock:72, img:''},
+      {id:genId(), name:'嬰兒護膚潤膚乳 200ml', sku:'Lotion-200', price:320, stock:16, img:''}
+    ];
+
+    function genId(){return 'id_'+Math.random().toString(36).slice(2,9)}
+
+    function save(key,data){localStorage.setItem(key,JSON.stringify(data))}
+    function load(key,def){const v=localStorage.getItem(key);return v?JSON.parse(v):def}
+
+    // initialize if empty
+    if(!localStorage.getItem(STORE_KEYS.products)) save(STORE_KEYS.products, SAMPLE_PRODUCTS);
+    if(!localStorage.getItem(STORE_KEYS.cart)) save(STORE_KEYS.cart, []);
+    if(!localStorage.getItem(STORE_KEYS.sales)) save(STORE_KEYS.sales, []);
+    if(!localStorage.getItem(STORE_KEYS.purchases)) save(STORE_KEYS.purchases, []);
+
+    // ======= UI 監聽與渲染 =======
+    const productGrid = document.getElementById('productGrid');
+    const productCount = document.getElementById('productCount');
+    const cartItemsEl = document.getElementById('cartItems');
+    const cartCount = document.getElementById('cartCount');
+    const adminMode = document.getElementById('adminMode');
+    const adminPanel = document.getElementById('adminPanel');
+
+    document.getElementById('search').addEventListener('input', renderProducts);
+    document.getElementById('sort').addEventListener('change', renderProducts);
+    document.getElementById('addProductBtn').addEventListener('click', handleAddProduct);
+    document.getElementById('importSampleBtn').addEventListener('click', ()=>{save(STORE_KEYS.products,SAMPLE_PRODUCTS); renderAll(); alert('已載入範例商品');});
+    document.getElementById('exportDataBtn').addEventListener('click', ()=>{const all={products:load(STORE_KEYS.products,[]), sales:load(STORE_KEYS.sales,[]), purchases:load(STORE_KEYS.purchases,[])};const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(all,null,2));a.download='bb_store_data.json';a.click();});
+    document.getElementById('viewSalesBtn').addEventListener('click', ()=>{renderHistory()});
+    document.getElementById('resetDemoBtn').addEventListener('click', ()=>{if(confirm('確認要清空所有示範資料？此動作不可還原')){localStorage.removeItem(STORE_KEYS.products);localStorage.removeItem(STORE_KEYS.cart);localStorage.removeItem(STORE_KEYS.sales);localStorage.removeItem(STORE_KEYS.purchases);location.reload()}})
+
+    document.getElementById('checkoutBtn').addEventListener('click', checkout);
+    document.getElementById('clearCartBtn').addEventListener('click', ()=>{if(confirm('清空購物車？')){save(STORE_KEYS.cart,[]);renderCart();}})
+
+    adminMode.addEventListener('change', ()=>{adminPanel.style.display = adminMode.checked ? 'block':'none'; renderAll();})
+
+    function getProducts(){return load(STORE_KEYS.products, [])}
+    function setProducts(p){save(STORE_KEYS.products,p)}
+    function getCart(){return load(STORE_KEYS.cart, [])}
+    function setCart(c){save(STORE_KEYS.cart,c)}
+
+    function renderProducts(){
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const sort = document.getElementById('sort').value;
+      let products = getProducts().slice();
+      if(q) products = products.filter(p => (p.name + ' ' + (p.sku||'')).toLowerCase().includes(q));
+      if(sort==='price_asc') products.sort((a,b)=>a.price-b.price);
+      if(sort==='price_desc') products.sort((a,b)=>b.price-a.price);
+      if(sort==='stock_low') products.sort((a,b)=>a.stock-b.stock);
+
+      productGrid.innerHTML = '';
+      productCount.textContent = products.length;
+      for(const p of products){
+        const el = document.createElement('div'); el.className='card';
+        el.innerHTML = `
+          <img src="${p.img || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'><rect width=\'100%\' height=\'100%\' fill=\'%23f4f6f8\'/><text x=\'50%\' y=\'50%\' font-size=\'18\' text-anchor=\'middle\' fill=\'%23888\'>No Image</text></svg>'}" alt="${escapeHtml(p.name)}">
+          <div style="margin-top:8px"><strong>${escapeHtml(p.name)}</strong></div>
+          <div class="muted small">SKU: ${escapeHtml(p.sku||'--')}</div>
+          <div style="margin-top:6px" class="row"><div class="price">NT$ ${numberWithCommas(p.price)}</div><div class="muted small">庫存：${p.stock}</div></div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button onclick="addToCart('${p.id}')">加入購物車</button>
+            <button style="background:#555" onclick="showProductDetail('${p.id}')">檢視</button>
+          </div>
+        `;
+        productGrid.appendChild(el);
+      }
     }
+
+    function renderCart(){
+      const cart = getCart();
+      cartItemsEl.innerHTML = '';
+      cartCount.textContent = cart.reduce((s,i)=>s+i.qty,0);
+      if(cart.length===0){cartItemsEl.innerHTML='<div class="muted">目前購物車為空</div>'; return}
+      for(const item of cart){
+        const p = getProducts().find(x=>x.id===item.id);
+        if(!p) continue;
+        const row = document.createElement('div'); row.className='row'; row.style.justifyContent='space-between';
+        row.innerHTML = `
+          <div style="flex:1">
+            <div><strong>${escapeHtml(p.name)}</strong></div>
+            <div class="muted small">單價：NT$${numberWithCommas(p.price)} × ${item.qty}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <div class="row"><button onclick="changeQty('${item.id}', -1)" style="background:#eee;color:#222">-</button><div style="padding:6px 10px;border-radius:6px;border:1px solid #eee">${item.qty}</div><button onclick="changeQty('${item.id}', 1)" style="background:#eee;color:#222">+</button></div>
+            <div><button onclick="removeFromCart('${item.id}')" style="background:#e14f4f">移除</button></div>
+          </div>
+        `;
+        cartItemsEl.appendChild(row);
+      }
+    }
+
+    function addToCart(id){
+      const products = getProducts();
+      const p = products.find(x=>x.id===id);
+      if(!p) {alert('找不到商品');return}
+      if(p.stock<=0){alert('此商品已無庫存');return}
+      const cart = getCart();
+      const existing = cart.find(x=>x.id===id);
+      if(existing){ if(existing.qty+1>p.stock){alert('數量超過現有庫存'); return} existing.qty+=1 } else cart.push({id:id, qty:1});
+      setCart(cart); renderCart();
+    }
+
+    function changeQty(id, delta){
+      const cart = getCart(); const item = cart.find(x=>x.id===id); if(!item) return;
+      const p = getProducts().find(x=>x.id===id);
+      const newQty = item.qty + delta; if(newQty<1){ if(confirm('移除該商品？')){ removeFromCart(id); } return }
+      if(newQty>p.stock){alert('數量超過庫存'); return}
+      item.qty = newQty; setCart(cart); renderCart();
+    }
+    function removeFromCart(id){ let cart=getCart(); cart=cart.filter(x=>x.id!==id); setCart(cart); renderCart(); }
+
+    function checkout(){
+      const cart = getCart(); if(cart.length===0){alert('購物車為空'); return}
+      const name = document.getElementById('custName').value.trim(); const phone = document.getElementById('custPhone').value.trim(); const addr = document.getElementById('custAddr').value.trim();
+      if(!name||!phone||!addr){alert('請填寫收件人、電話與地址'); return}
+      // 檢查庫存
+      const products = getProducts();
+      for(const it of cart){ const p = products.find(x=>x.id===it.id); if(!p || p.stock < it.qty){alert('庫存不足：'+(p? p.name:'商品已下架')); return} }
+      // 扣庫存 & 建銷貨紀錄
+      const sales = load(STORE_KEYS.sales,[]);
+      const sale = {id:genId(), date:new Date().toISOString(), customer:{name,phone,addr}, items:cart.map(i=>({id:i.id, qty:i.qty})), total:0};
+      let total=0; for(const it of cart){ const p = products.find(x=>x.id===it.id); p.stock -= it.qty; total += p.price * it.qty }
+      sale.total = total; sales.push(sale); save(STORE_KEYS.sales, sales); setProducts(products); save(STORE_KEYS.cart, []);
+      // 同時生一筆「出貨紀錄」到 historyPanel
+      alert('下單成功！ 訂單編號：'+sale.id+'\n合計 NT$'+numberWithCommas(sale.total));
+      renderAll();
+    }
+
+    // Admin: 新增商品 / 進貨
+    function handleAddProduct(){
+      const name = document.getElementById('pName').value.trim(); const sku = document.getElementById('pSKU').value.trim(); const price = Number(document.getElementById('pPrice').value); const stock = parseInt(document.getElementById('pStock').value); const img = document.getElementById('pImg').value.trim();
+      if(!name || !price || isNaN(price) || isNaN(stock)) {alert('請填妥名稱、價格與數量(整數)'); return}
+      const products = getProducts();
+      // 若同 SKU 或 同名，視為同商品 -> 增加庫存與更新價格
+      let existing = null;
+      if(sku) existing = products.find(p=>p.sku && p.sku.toLowerCase()===sku.toLowerCase());
+      if(!existing) existing = products.find(p=>p.name.toLowerCase()===name.toLowerCase());
+      if(existing){ existing.stock += stock; existing.price = price; if(img) existing.img = img; save(STORE_KEYS.products, products); recordPurchase(existing.id, name, sku, price, stock); alert('已新增進貨，並更新商品庫存'); }
+      else{
+        const newP = {id:genId(), name, sku, price, stock, img}; products.push(newP); save(STORE_KEYS.products, products); recordPurchase(newP.id, name, sku, price, stock); alert('已建立新商品並進貨');
+      }
+      // 清空欄位
+      document.getElementById('pName').value=''; document.getElementById('pSKU').value=''; document.getElementById('pPrice').value=''; document.getElementById('pStock').value=''; document.getElementById('pImg').value='';
+      renderAll();
+    }
+
+    function recordPurchase(productId, name, sku, price, qty){
+      const purchases = load(STORE_KEYS.purchases,[]);
+      purchases.push({id:genId(), date:new Date().toISOString(), productId, name, sku, price, qty});
+      save(STORE_KEYS.purchases, purchases);
+    }
+
+    function renderInventory(){
+      const tbody = document.querySelector('#inventoryTable tbody'); tbody.innerHTML='';
+      for(const p of getProducts()){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku||'--')}</td><td>NT$ ${numberWithCommas(p.price)}</td><td>${p.stock}</td><td><button onclick="adminAdjustStock('${p.id}')">調整</button></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function adminAdjustStock(id){ const qty = prompt('輸入調整庫存數量 (正數=進貨, 負數=盤點調整)'); if(qty===null) return; const n = parseInt(qty); if(isNaN(n)){alert('請輸入整數');return} const products = getProducts(); const p = products.find(x=>x.id===id); if(!p) return; p.stock += n; if(p.stock<0) p.stock=0; save(STORE_KEYS.products, products); if(n>0) recordPurchase(p.id, p.name, p.sku, p.price, n); renderAll(); }
+
+    function renderHistory(){
+      const history = document.getElementById('historyPanel'); history.innerHTML='';
+      const sales = load(STORE_KEYS.sales,[]); const purchases = load(STORE_KEYS.purchases,[]);
+      const sDiv = document.createElement('div'); sDiv.innerHTML = `<h4>銷貨紀錄 (${sales.length})</h4>`;
+      if(sales.length===0) sDiv.innerHTML += '<div class="muted">尚無銷貨紀錄</div>';
+      else{
+        const t=document.createElement('table'); t.innerHTML='<thead><tr><th>訂單</th><th>日期</th><th>品項數</th><th>總額</th></tr></thead>'; const b=document.createElement('tbody');
+        for(const o of sales.slice().reverse()){ const date=new Date(o.date).toLocaleString(); b.innerHTML += `<tr><td>${o.id}</td><td>${date}</td><td>${o.items.length}</td><td>NT$ ${numberWithCommas(o.total)}</td></tr>` }
+        t.appendChild(b); sDiv.appendChild(t);
+      }
+      const pDiv=document.createElement('div'); pDiv.innerHTML = `<h4 style="margin-top:12px">進貨紀錄 (${purchases.length})</h4>`;
+      if(purchases.length===0) pDiv.innerHTML += '<div class="muted">尚無進貨紀錄</div>';
+      else{
+        const t2=document.createElement('table'); t2.innerHTML='<thead><tr><th>編號</th><th>日期</th><th>名稱</th><th>數量</th></tr></thead>'; const b2=document.createElement('tbody');
+        for(const o of purchases.slice().reverse()){ const date=new Date(o.date).toLocaleString(); b2.innerHTML += `<tr><td>${o.id}</td><td>${date}</td><td>${escapeHtml(o.name)}</td><td>${o.qty}</td></tr>` }
+        t2.appendChild(b2); pDiv.appendChild(t2);
+      }
+      history.appendChild(sDiv); history.appendChild(pDiv);
+    }
+
+    // product detail lightbox (簡單版)
+    function showProductDetail(id){ const p = getProducts().find(x=>x.id===id); if(!p) return; alert(p.name + '\n價格：NT$'+p.price + '\n庫存：'+p.stock + '\nSKU：'+(p.sku||'--')) }
+
+    // helper render entry
+    function renderAll(){ renderProducts(); renderCart(); renderInventory(); renderHistory(); }
+    renderAll();
+
+    // ======= 小工具函式 =======
+    function numberWithCommas(x){return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",")}
+    function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])) }
+
+    // 暴露少數函式以供按鈕內 onclick 使用
+    window.addToCart = addToCart; window.showProductDetail = showProductDetail; window.changeQty = changeQty; window.removeFromCart = removeFromCart; window.adminAdjustStock = adminAdjustStock;
   </script>
 </body>
 </html>
