@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>農產品價格不確定關稅計算器</title>
+  <style>
+    :root{font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;}
+    body{margin:0;padding:20px;background:#f5f7fb;color:#1f2937}
+    h1{font-size:20px;margin:0 0 12px}
+    .container{max-width:980px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 20px rgba(15,23,42,0.08)}
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .card{flex:1 1 220px;background:#fafafa;padding:12px;border-radius:8px;border:1px solid #eef2f7}
+    label{display:block;font-size:13px;margin-bottom:6px}
+    input[type='number'], input[type='text'], select{width:100%;padding:8px;border-radius:6px;border:1px solid #d7e0ea;font-size:14px}
+    .actions{display:flex;gap:8px;align-items:center}
+    button{padding:8px 12px;border-radius:8px;border:0;background:#0ea5a9;color:#fff;cursor:pointer}
+    button.secondary{background:#64748b}
+    .results{margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;border:1px dashed #e6eef6}
+    .stat{display:flex;gap:12px;align-items:baseline}
+    .stat b{font-size:18px}
+    canvas{width:100%;height:200px;display:block;background:#fff;border-radius:6px;border:1px solid #e6eef6}
+    small.gray{color:#64748b}
+    .col{flex:1}
+    .full{flex:1 1 100%}
+    footer{font-size:12px;color:#64748b;margin-top:14px}
+    .download{background:#2563eb}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>農產品價格不確定關稅計算器</h1>
+    <p class="gray">說明：輸入成本、運費與關稅不確定區間（或固定值），按 <b>模擬計算</b> 即可得到價格分布、平均值與百分位數。內建Monte Carlo模擬（瀏覽器執行）。</p>
+
+    <div class="row">
+      <div class="card">
+        <label>基本成本 (每單位)</label>
+        <input id="baseCost" type="number" min="0" step="0.01" value="0.50">
+
+        <label>數量 (單位)</label>
+        <input id="quantity" type="number" min="1" step="1" value="1000">
+
+        <label>運費 (每單位)</label>
+        <input id="freight" type="number" min="0" step="0.01" value="0.05">
+
+        <label>其他成本 (每單位)</label>
+        <input id="otherCost" type="number" min="0" step="0.01" value="0.02">
+      </div>
+
+      <div class="card">
+        <label>關稅模式</label>
+        <select id="tariffMode">
+          <option value="fixed">固定百分比</option>
+          <option value="range">區間 (均勻分布)</option>
+          <option value="triangular">三角分布 (min - mode - max)</option>
+        </select>
+
+        <div id="tariffFixedInputs" style="margin-top:8px">
+          <label>關稅 (%) - 固定</label>
+          <input id="tariffFixed" type="number" min="0" step="0.01" value="5">
+        </div>
+
+        <div id="tariffRangeInputs" style="display:none;margin-top:8px">
+          <label>關稅最小 (%)</label>
+          <input id="tariffMin" type="number" min="0" step="0.01" value="3">
+          <label>關稅最大 (%)</label>
+          <input id="tariffMax" type="number" min="0" step="0.01" value="8">
+        </div>
+
+        <div id="tariffTriInputs" style="display:none;margin-top:8px">
+          <label>最小 (%)</label>
+          <input id="tariffTriMin" type="number" min="0" step="0.01" value="2">
+          <label>模式 (最可能) (%)</label>
+          <input id="tariffTriMode" type="number" min="0" step="0.01" value="5">
+          <label>最大 (%)</label>
+          <input id="tariffTriMax" type="number" min="0" step="0.01" value="10">
+        </div>
+      </div>
+
+      <div class="card">
+        <label>增值稅 / 銷售稅 (%)</label>
+        <input id="vat" type="number" min="0" step="0.01" value="5">
+
+        <label>毛利率 (%)</label>
+        <input id="margin" type="number" min="0" step="0.01" value="12">
+
+        <label>模擬次數</label>
+        <input id="iterations" type="number" min="100" step="100" value="5000">
+
+        <div style="margin-top:8px" class="actions">
+          <button id="run">模擬計算</button>
+          <button id="download" class="download">下載CSV</button>
+          <button id="reset" class="secondary">重設</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row full">
+      <div class="card full">
+        <h3>結果</h3>
+        <div class="results" id="summary">
+          <div class="stat"><div class="col"><small>平均成本含關稅 (每單位)</small><div><b id="avgCost">-</b></div></div>
+          <div class="col"><small>中位數 (每單位)</small><div><b id="medianCost">-</b></div></div>
+          <div class="col"><small>5% / 95% (每單位)</small><div><b id="p5p95">-</b></div></div></div>
+
+          <p style="margin-top:8px"><small class="gray">說明：模擬結果為含關稅、增值稅後的每單位出貨價，尚未拆分匯率風險。如需匯率，請在其他成本中加上換算後差額。</small></p>
+
+          <canvas id="histogramCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <footer>版本 1.0 — 若需加入匯率、不確定供應量或進階成本結構可請求客製化。</footer>
+  </div>
+
+<script>
+  // UI handling
+  const tariffMode = document.getElementById('tariffMode');
+  const fixedInputs = document.getElementById('tariffFixedInputs');
+  const rangeInputs = document.getElementById('tariffRangeInputs');
+  const triInputs = document.getElementById('tariffTriInputs');
+
+  tariffMode.addEventListener('change', ()=>{
+    fixedInputs.style.display = 'none';
+    rangeInputs.style.display = 'none';
+    triInputs.style.display = 'none';
+    if(tariffMode.value === 'fixed') fixedInputs.style.display = 'block';
+    if(tariffMode.value === 'range') rangeInputs.style.display = 'block';
+    if(tariffMode.value === 'triangular') triInputs.style.display = 'block';
+  });
+
+  // Sampling functions
+  function rand(){return Math.random();}
+  function sampleUniform(a,b){return a + (b-a)*rand();}
+  // triangular sampling (min, mode, max)
+  function sampleTriangular(a,c,b){
+    const u = rand();
+    const fc = (c - a) / (b - a);
+    if(u < fc) return a + Math.sqrt(u*(b-a)*(c-a));
+    else return b - Math.sqrt((1-u)*(b-a)*(b-c));
+  }
+
+  function runSimulation(){
+    const baseCost = parseFloat(document.getElementById('baseCost').value) || 0;
+    const quantity = parseFloat(document.getElementById('quantity').value) || 1;
+    const freight = parseFloat(document.getElementById('freight').value) || 0;
+    const otherCost = parseFloat(document.getElementById('otherCost').value) || 0;
+    const vat = parseFloat(document.getElementById('vat').value) || 0;
+    const margin = parseFloat(document.getElementById('margin').value) || 0;
+    const iterations = Math.max(100, parseInt(document.getElementById('iterations').value) || 1000);
+
+    let tariffSampler;
+    const mode = document.getElementById('tariffMode').value;
+    if(mode === 'fixed'){
+      const t = (parseFloat(document.getElementById('tariffFixed').value)||0)/100;
+      tariffSampler = ()=> t;
+    } else if(mode === 'range'){
+      const a = (parseFloat(document.getElementById('tariffMin').value)||0)/100;
+      const b = (parseFloat(document.getElementById('tariffMax').value)||0)/100;
+      tariffSampler = ()=> sampleUniform(a,b);
+    } else if(mode === 'triangular'){
+      const a = (parseFloat(document.getElementById('tariffTriMin').value)||0)/100;
+      const c = (parseFloat(document.getElementById('tariffTriMode').value)||0)/100;
+      const b = (parseFloat(document.getElementById('tariffTriMax').value)||0)/100;
+      tariffSampler = ()=> sampleTriangular(a,c,b);
+    }
+
+    // Simulate
+    const results = new Float64Array(iterations);
+    for(let i=0;i<iterations;i++){
+      const tariff = tariffSampler();
+      // cost before VAT: baseCost + freight + otherCost + tariff * (baseCost)  (tariff often applied on CIF or FOB value; here we apply to base cost simplification)
+      const costBeforeVat = baseCost + freight + otherCost + tariff * baseCost;
+      const costAfterVat = costBeforeVat * (1 + vat/100);
+      // selling price to achieve margin
+      const price = costAfterVat / (1 - margin/100);
+      results[i] = price;
+    }
+
+    displayResults(results);
+    window.latestResults = results; // for download
+  }
+
+  function displayResults(arr){
+    const a = Array.from(arr).sort((x,y)=>x-y);
+    const n = a.length;
+    const mean = a.reduce((s,v)=>s+v,0)/n;
+    const median = (n%2===1)? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2;
+    const p5 = a[Math.floor(n*0.05)];
+    const p95 = a[Math.floor(n*0.95)];
+
+    document.getElementById('avgCost').innerText = mean.toFixed(4);
+    document.getElementById('medianCost').innerText = median.toFixed(4);
+    document.getElementById('p5p95').innerText = p5.toFixed(4) + '  /  ' + p95.toFixed(4);
+
+    drawHistogram(a);
+  }
+
+  function drawHistogram(sortedArr){
+    const canvas = document.getElementById('histogramCanvas');
+    const ctx = canvas.getContext('2d');
+    // resize to device pixels
+    const DPR = window.devicePixelRatio || 1;
+    const W = canvas.clientWidth; const H = canvas.clientHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctx.scale(DPR, DPR);
+    ctx.clearRect(0,0,W,H);
+
+    const bins = 40;
+    const min = sortedArr[0];
+    const max = sortedArr[sortedArr.length-1];
+    const range = max - min || 1;
+    const counts = new Array(bins).fill(0);
+    for(const v of sortedArr){
+      const idx = Math.min(bins-1, Math.floor((v - min) / range * bins));
+      counts[idx]++;
+    }
+    const maxCount = Math.max(...counts);
+
+    // draw axes
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,W,H);
+
+    const padding = 36;
+    const graphW = W - padding*2;
+    const graphH = H - padding*2;
+
+    // bars
+    const barW = graphW / bins;
+    for(let i=0;i<bins;i++){
+      const h = (counts[i] / maxCount) * graphH;
+      const x = padding + i*barW;
+      const y = padding + (graphH - h);
+      ctx.fillStyle = '#0ea5a9';
+      ctx.fillRect(x, y, Math.max(1,barW-2), h);
+    }
+
+    // labels
+    ctx.fillStyle = '#334155';
+    ctx.font = '12px system-ui';
+    ctx.fillText(min.toFixed(3), padding, H - 8);
+    ctx.fillText(max.toFixed(3), W - padding - 40, H - 8);
+  }
+
+  // Download CSV
+  function downloadCSV(){
+    const arr = window.latestResults;
+    if(!arr){alert('請先按「模擬計算」生成結果。');return}
+    const rows = ['price'];
+    for(const v of arr) rows.push(v.toFixed(6));
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'simulation_prices.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('run').addEventListener('click', runSimulation);
+  document.getElementById('download').addEventListener('click', downloadCSV);
+  document.getElementById('reset').addEventListener('click', ()=> location.reload());
+
+  // initialize
+  runSimulation();
+</script>
+</body>
+</html>
